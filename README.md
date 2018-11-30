@@ -9,6 +9,19 @@ YouTube -
 ![taxi](https://github.com/taldatech/pytorch-dqn-policy-gradient/blob/master/imgs/taxi_agent_gif.gif)
 ![acrobot](https://github.com/taldatech/pytorch-dqn-policy-gradient/blob/master/imgs/AcrobotAgent_edit_1.gif)
 
+- [pytorch-dqn-policy-gradient](#pytorch-dqn-policy-gradient)
+  * [Prerequisites](#prerequisites)
+  * [Files in the repository](#files-in-the-repository)
+  * [Taxi-v2 Environment (DQN)](#taxi-v2-environment--dqn-)
+    + [API (`python taxi_main.py --help`)](#api---python-taxi-mainpy---help--)
+    + [Playing](#playing)
+    + [Training](#training)
+  * [Taxi-v2 Environment (Policy Gradient)](#taxi-v2-environment--policy-gradient-)
+  * [Acrobot Environment (DQN)](#acrobot-environment--dqn-)
+    + [API (`python acrobot_main.py --help`)](#api---python-acrobot-mainpy---help--)
+    + [Playing](#playing-1)
+    + [Training](#training-1)
+
 ## Prerequisites
 |Library         | Version |
 |----------------------|----|
@@ -100,6 +113,8 @@ Examples:
 For full description of the flags, see the full API.
 
 ## Taxi-v2 Environment (Policy Gradient)
+
+TODO
 
 ## Acrobot Environment (DQN)
 
