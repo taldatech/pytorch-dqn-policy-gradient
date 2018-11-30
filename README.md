@@ -48,8 +48,8 @@ YouTube -
 |`Schedule.py`| Classes: ExponentialSchedule, LinearSchedule (scheduling of epsilon-greedy policy)|
 |`*.pth`| Checkpoint files for the Agents (playing/continual learning)|
 |`*_training.status`| Pickle files with the recent training status for a model (episodes seen, total rewards...)|
-|`notebook_1.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Taxi-v2 environemnt| 
-|`notebook_2.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Acrobot-v1 environemnt| 
+|`Taxi_Agent.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Taxi-v2 environemnt| 
+|`Acrobot_Agent.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Acrobot-v1 environemnt| 
 |`writeup.pdf` | Summary of this work| 
 
 
