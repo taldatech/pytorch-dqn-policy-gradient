@@ -1,167 +1,162 @@
 # pytorch-dqn-policy-gradient
 PyTorch implementation for Deep Q-Learning and Policy Gradient algorithms on several OpenAI's environemnts
 
-![title](https://github.com/taldatech/tf-bgd/blob/master/imgs/bgd_logo.png)
-![subtitle](https://github.com/taldatech/tf-bgd/blob/master/imgs/bgd_subtitle.png)
-# tf-bgd
 Video:
 
-Vimeo - https://vimeo.com/297651842
-
-YouTube - https://youtu.be/fa-xLXTzZ8I
-## Bayesian Gradient Descent Algorithm Model for TensorFlow
-![regress](https://github.com/taldatech/tf-bgd/blob/master/imgs/line.gif)
-
-Python and Tensorflow implementation of the Bayesian Gradient Descent algorithm and model
-
-### Based on the paper "Bayesian Gradient Descent: Online Variational Bayes Learning with Increased Robustness to Catastrophic Forgetting and Weight Pruning" by Chen Zeno, Itay Golan, Elad Hoffer, Daniel Soudry
-
-Paper PDF: https://arxiv.org/abs/1803.10123
-
-## Theoretical Background
-
-The basic assumption is that in each step, the previous posterior distribution is used as the new prior distribution and that the parametric distribution is approximately a Diagonal Gaussian, that is, all the parameters of the weight vector $\theta$ are independent.
-
-We define the following:
-* ![equation](https://latex.codecogs.com/gif.latex?%24%5Cepsilon_i%24) - a Random Variable (RV) sampled from ![equation](https://latex.codecogs.com/gif.latex?%24N%280%2C1%29%24)
-* ![equation](https://latex.codecogs.com/gif.latex?%24%5Ctheta%24) - the weights which we wish to find their posterior distribution
-* ![equation](https://latex.codecogs.com/gif.latex?%5Cphi%20%3D%20%28%5Cmu%2C%5Csigma%29) - the parameters which serve as a condition for the distribution of ![equation](https://latex.codecogs.com/gif.latex?%24%5Ctheta%24)
-* ![equation](https://latex.codecogs.com/gif.latex?%24%5Cmu%24) - the mean of the weights' distribution, initially sampled from ![equation](https://latex.codecogs.com/gif.latex?N%280%2C%5Cfrac%7B2%7D%7Bn_%7Binput%7D%20&plus;%20n_%7Boutput%7D%7D%29)
-* ![equation](https://latex.codecogs.com/gif.latex?%5Csigma) - the STD (Variance's root) of the weights' distribution, initially set to a small constant.
-* ![equation](https://latex.codecogs.com/gif.latex?K) - the number of sub-networks
-* ![equation](https://latex.codecogs.com/gif.latex?%5Ceta) - hyper-parameter to compenstate for the accumulated error (tunable).
-* ![equation](https://latex.codecogs.com/gif.latex?L%28%5Ctheta%29) - Loss function
-
-Algorithm Sketch:
-
-* Initialize: ![equation](https://latex.codecogs.com/gif.latex?%5Cmu%2C%20%5Csigma%2C%20%5Ceta%2C%20K)
-* For each sub-network k: sample ![equation](https://latex.codecogs.com/gif.latex?%5Cepsilon_0%5Ek) and set ![equation](https://latex.codecogs.com/gif.latex?%5Ctheta_0%5Ek%20%3D%20%5Cmu_0%20&plus;%20%5Cepsilon_0%5Ek%20%5Csigma_0)
-* Repeat:
-
-    1. For each sub-network k: sample ![equation](https://latex.codecogs.com/gif.latex?%5Cepsilon_i%5Ek), compute gradients: ![equation](https://latex.codecogs.com/gif.latex?%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%29%7D%7B%5Cpartial%20%5Ctheta_i%7D)
-    2. Set ![equation](https://latex.codecogs.com/gif.latex?%5Cmu_i%20%5Cleftarrow%20%5Cmu_i%20-%20%5Ceta%5Csigma_i%5E2%5Cmathbb%7BE%7D_%7B%5Cepsilon%7D%5B%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%29%7D%7B%5Cpartial%20%5Ctheta_i%7D%5D)
-    3. Set ![equation](https://latex.codecogs.com/gif.latex?%5Csigma_i%20%5Cleftarrow%20%5Csigma_i%5Csqrt%7B1%20&plus;%20%28%5Cfrac%7B1%7D%7B2%7D%20%5Csigma_i%5Cmathbb%7BE%7D_%7B%5Cepsilon%7D%5B%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%29%7D%7B%5Cpartial%20%5Ctheta_i%7D%5Cepsilon_i%5D%29%5E2%7D%20-%20%5Cfrac%7B1%7D%7B2%7D%5Csigma_i%5E2%5Cmathbb%7BE%7D_%7B%5Cepsilon%7D%5B%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%29%7D%7B%5Cpartial%20%5Ctheta_i%7D%5Cepsilon_i%5D)
-    4. Set ![equation](https://latex.codecogs.com/gif.latex?%5Ctheta_i%5Ek%20%3D%20%5Cmu_i%20&plus;%20%5Cepsilon_i%5Ek%20%5Csigma_i) for each k (sub-network)
-    
-* Until convergence criterion is met
-* Note: i is the ![equation](https://latex.codecogs.com/gif.latex?i%5E%7Bth%7D) component of the vector, that is, if we have n paramaters (weights, bias) for each sub-network, then for each parameter we have ![equation](https://latex.codecogs.com/gif.latex?%5Cmu_i) and ![equation](https://latex.codecogs.com/gif.latex?%5Csigma_i)
-
-The expectactions are estimated using Monte Carlo method:
-
-![equation](https://latex.codecogs.com/gif.latex?%5Cmathbb%7BE%7D_%7B%5Cepsilon%7D%5B%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%29%7D%7B%5Cpartial%20%5Ctheta_i%7D%5D%20%5Capprox%20%5Cfrac%7B1%7D%7BK%7D%5Csum_%7Bk%3D1%7D%5E%7BK%7D%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%5E%7B%28k%29%7D%29%7D%7B%5Cpartial%20%5Ctheta_i%7D)
+YouTube - 
 
 
-![equation](https://latex.codecogs.com/gif.latex?%5Cmathbb%7BE%7D_%7B%5Cepsilon%7D%5B%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%29%7D%7B%5Cpartial%20%5Ctheta_i%7D%5Cepsilon_i%5D%20%5Capprox%20%5Cfrac%7B1%7D%7BK%7D%5Csum_%7Bk%3D1%7D%5E%7BK%7D%5Cfrac%7B%5Cpartial%20L%28%5Ctheta%5E%7B%28k%29%7D%29%7D%7B%5Cpartial%20%5Ctheta_i%7D%5Cepsilon_i%5E%7B%28k%29%7D)
-
-### Loss Function Derivation for Regression Problems
-
-![equation](https://latex.codecogs.com/gif.latex?L%28%5Ctheta%29%20%3D%20-log%28P%28D%7C%5Ctheta%29%29%20%3D%20-log%28%5Cprod_%7Bi%3D1%7D%5E%7BM%7D%20P%28D_i%7C%5Ctheta%29%29%20%3D%20-%5Csum_%7Bi%3D1%7D%5E%7BM%7D%20log%28P%28D_i%7C%5Ctheta%29%29)
-
-Recall that from our Gaussian noise assumption, we dervied that the target (label) ![equation](https://latex.codecogs.com/gif.latex?t) is also Gaussian distributed, such that: ![equation](https://latex.codecogs.com/gif.latex?P%28t%7Cx%2C%5Ctheta%29%20%3D%20N%28t%7Cy%28x%2C%5Ctheta%29%2C%20%5Cbeta%5E%7B-1%7D%29)
-where ![equation](https://latex.codecogs.com/gif.latex?%5Cbeta) is the percision (the inverse variance).
-Assuming that the dataset is IID, we get the following:
-![equation](https://latex.codecogs.com/gif.latex?P%28t%7Cx%2C%5Ctheta%2C%20%5Cbeta%29%20%3D%20%5Cprod_%7Bi%3D1%7D%5E%7BM%7D%20P%28t_i%7Cx_i%2C%5Ctheta%2C%20%5Cbeta%29)
-Taking the negative logarithm, we get:
-![equation](https://latex.codecogs.com/gif.latex?-log%28%20P%28t%7Cx%2C%5Ctheta%2C%20%5Cbeta%29%29%20%3D%20%5Cfrac%7B%5Cbeta%7D%7B2%7D%5Csum_%7Bi%3D1%7D%5EM%20%5By%28x_i%2C%5Ctheta%29%20-%20t_i%5D%5E2%20-%5Cfrac%7BN%7D%7B2%7Dln%28%5Cbeta%29%20&plus;%20%5Cfrac%7BN%7D%7B2%7Dln%282%5Cpi%29)
-Maximizing the log-likelihood is equivalent to minimizing the sum: ![equation](https://latex.codecogs.com/gif.latex?%5Cfrac%7B1%7D%7B2%7D%5Csum_%7Bi%3D1%7D%5EM%20%5By%28x_i%2C%5Ctheta%29%20-%20t_i%5D%5E2) with respect to ![equation](https://latex.codecogs.com/gif.latex?%5Ctheta%24) (looks similar to MSE, without the normalization), which is why we use `reduce_sum` in the code and not `reduce_mean`.
-
-Note: we denote D as a general expression for the data, and in our case is the probability of the target conditiond on the input and the weights. Pay attention that ![equation](https://latex.codecogs.com/gif.latex?L%28%5Ctheta%29) is the log of the probability which is log of an expression between [0,1], thus, the loss itself is not bounded. The probability is a Gaussian (which is of course, bounded).
-
-### Regression using BGD
-
-We wish to test the algorithm by learning ![equation](https://latex.codecogs.com/gif.latex?y%20%3D%20x%5E3) with samples from ![equation](https://latex.codecogs.com/gif.latex?y%20%3D%20x%5E3%20&plus;%5Czeta) such that ![equation](https://latex.codecogs.com/gif.latex?%5Czeta)~![equation](https://latex.codecogs.com/gif.latex?N%280%2C9%29). We'll take 20 training examples and perform 40 epochs.
-
-#### Network Prameters:
-* Sub-Networks (K) = 10
-* Hidden Layers (per Sub-Network): 1
-* Neurons per Layer: 100
-* Loss: SSE (Sum of Square Error)
-* Optimizer: BGD (weights are updated using BGD, unbiased Monte-Carlo gradients)
-
-
+![taxi](https://github.com/taldatech/pytorch-dqn-policy-gradient/blob/master/imgs/taxi_agent_gif.gif)
+![acrobot](https://github.com/taldatech/pytorch-dqn-policy-gradient/blob/master/imgs/AcrobotAgent_edit_1.gif)
 
 ## Prerequisites
 |Library         | Version |
 |----------------------|----|
-|`Python`|  `3.6.6 (Anaconda)`|
-|`tensorflow`|  `1.10.0`|
-|`sklearn`|  `0.20.0`|
+|`Python`|  `3.5.5 (Anaconda)`|
+|`torch`|  `0.4.1`|
+|`gym`|  `0.10.9`|
+|`IPython`|  `6.4.0`|
 |`numpy`|  `1.14.5`|
 |`matplotlib`| `3.0.0`|
 
-## Basic Usage
-
-Using the model is simple, there are multiple examples in the repository. Basic methods:
-
-* `from bgd_model import BgdModel`
-* `model = BgdModel(config, 'train')`
-* `batch_acc_train = model.train(sess, X_batch, Y_batch)`
-* `batch_acc_test = model.calc_accuracy(sess, X_test, y_test)`
-* `model.save(sess, checkpoint_path, global_step=model.global_step)`
-* `model.restore(session, FLAGS.model_path)`
-* `results['predictions'] = model.predict(sess, inputs)`
-* `upper_confidence, lower_confidence = model.calc_confidence(sess, inputs)`
 
 
 ## Files in the repository
 
 |File name         | Purpsoe |
 |----------------------|------|
-|`bgd_model.py`|  Includes the class for the BGD model from which you import|
-|`bgd_regression_example.py`| Usage example: simple regression as mentioned above|
-|`bgd_train.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs| 
+|`taxi_main.py`| Main application for training/playing a Taxi-v2 agent|
+|`acrobot_main.py`| Main application for training/playing a Acrobot-v1 agent|
+|`Agent.py`| Classes: TaxiAgent, AcrobotAgent|
+|`DQN_model.py`| Classes: DQN_DNN, DQN_CNN (the neural networks architecture)|
+|`Helpers.py`| Helper functions (converting states, plotting...)|
+|`OneHotGenerator.py`| Class: OneHotGenerator (converts integers to One-Hot-Vectors)|
+|`ReplayBuffer.py`| Class: ReplayBuffer (stores memories for the DQN learning)|
+|`Schedule.py`| Classes: ExponentialSchedule, LinearSchedule (scheduling of epsilon-greedy policy)|
+|`*.pth`| Checkpoint files for the Agents (playing/continual learning)|
+|`*_training.status`| Pickle files with the recent training status for a model (episodes seen, total rewards...)|
+|`notebook_1.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Taxi-v2 environemnt| 
+|`notebook_2.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Acrobot-v1 environemnt| 
+|`writeup.pdf` | Summary of this work| 
 
 
-## Main Example App Usage:
+## Taxi-v2 Environment (DQN)
 
-This little example will train a regression model as described in the background.
+### API (`python taxi_main.py --help`)
 
-The testing (predicting) is performed on 2000 points in [-6,6], which has samples outside the training region ([-4,4], 20 points). It will also output the maximum uncertainty (maximum standard deviation for the output), where we want more uncertainty in uncharted regions to show the flexibility of the network (the reddish zones in the graph).
 
-You should use the `bgd_regression_example.py` file with the following arguments:
+You should use the `taxi_main.py` file with the following arguments:
 
 |Argument                 | Description                                 |
 |-------------------------|---------------------------------------------|
 |-h, --help       | shows arguments description             |
-|-w, --write_log     | save log for tensorboard (error graphs, and the NN)  |
-|-u, --reset    | start training from scratch, deletes previous checkpoints |
-|-k, --num_sub_nets       | number of sub networks (K parameter), default: 10 |
-|-e, --epochs	| number of epochs to run, default: 40 |
-|-b, --batch_size| batch size for training, default: 1 |
-|-n, --neurons| number of hidden units, default: 100|
-|-l, --layers| number of layers in the network , default: 1 |
-|-t, --eta| eta parameter ('learning rate'), deafult: 50.0 |
-|-g, --sigma| sigma_0 parameter, default: 0.002 |
-|-f, --save_freq| frequency to save checkpoints of the model, default: 200 |
-|-r, --decay_rate| decay rate of eta (exponential scheduling), default: 1/10 |
-|-y, --decay_steps| decay steps fof eta (exponential scheduling), default: 10000 |
+|-t, --train     | train or continue training an agent  |
+|-p, --play    | play the environment using an a pretrained agent |
+|-n, --name       | model name, for saving and loading, if not set, training will continue from a pretrained checkpoint |
+|-m, --mode	| model's mode or state representation ('one-hot', 'location-one-hot'), default: 'one-hot' |
+|-e, --episodes| number of episodes to play or train, default: 2 (play), 5000 (train) |
+|-x, --exploration| epsilong-greedy scheduling ('exp', 'lin'), default: 'exp'|
+|-d, --decay_rate| number of episodes for epsilon decaying, default: 800 |
+|-u, --hidden_units| number of neurons in the hidden layer of the DQN, default: 150 |
+|-o, --optimizer| optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp' |
+|-r, --learn_rate| learning rate for the optimizer, default: 0.0003 |
+|-g, --gamma| gamma parameter for the Q-Learning, default: 0.99 |
+|-s, --buffer_size| Replay Buffer size, default: 500000 |
+|-b, --batch_size| number of samples in each batch, default: 128 |
+|-i, --steps_to_start_learn| number of steps before the agents starts learning, default: 1000 |
+|-c, --target_update_freq| number of steps between copying the weights to the target DQN, default: 5000 |
+|-a, --clip_grads| use Gradient Clipping regularization (default: False) |
+|-z, --batch_norm| use Batch Normalization between DQN's layers (default: False) |
+|-y, --dropout| use Dropout regularization on the layers of the DQN (default: False) |
+|-q, --dropout_rate| probability for a layer to be dropped when using Dropout, default: 0.4 |
 
-## Training and Testing
+### Playing
+Agents checkpoints (files ending with `.pth`) are saved and loaded from the `taxi_agent_ckpt` directory.
+Playing a pretrained agent for 2 episodes:
 
-Examples to run `bgd_regression_example.py`:
+`python taxi_main.py --play`
 
-* Note: if there are checkpoints in the `/model/` dir, and the model parameters are the same, training will automatically resume from the latest checkpoint (you can choose the exact checkpoint number by editing the `checkpoint` file in the `/model/` dir with your favorite text editor).
+For more more episodes, e.g 10:
 
-`python bgd_regression_example.py -k 10 -e 40 -b 1 -n 150 -l 1 -t 300.0 -g 0.005`
+`python taxi_main.py --play -e 10`
 
-`python bgd_regression_example.py -u -w -k 15 -e 80 -b 5 -n 200 -l 2 -t 50.0 -g 0.003`
+Playing a pretrained agent with Location-One-Hot state representation:
 
-Model's checkpoints are saved in `/model/` dir.
+`python taxi_main.py --play -m location-one-hot -e 3`
 
-## GPU
-If you have `tensoflow-gpu` you can run the example (the session uses `tf.GPUOptions(allow_growth=True)` ), but make sure to choose the correct device:
+For playing another chekpoint, the `-n` flag must correspond with a `.pth` checkpoint file in the `taxi_agent_ckpt` directory.
 
-`os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" ` (so the IDs match nvidia-smi)
+### Training
 
-`os.environ["CUDA_VISIBLE_DEVICES"] = "2"`  ("0, 1" for multiple)
+Note: in order to continue training from a pretrained checkpoint you can either:
+	1. Name the model with the same name as the saved chekpoint (e.g. if the there exists `taxi_agent_user.pth` the model name should be `user`)
+	2. Leave out the name (don't use the `-n` flag) and a default pretrained checkpoint will be loaded and a random name will be given (which you can change later)
 
-## Tensorboard
+Examples:
 
-You can easily use `tensorboard` when running `bgd_regression_example.py`. You should run it with
-`-w` flag (to save a log file). This creates a `tf_logs` directory. To run `tensorboard`:
+* `python taxi_main.py --train -n my_taxi -m one-hot -e 5000 -x exp -d 800 -u 150 -o RMSprop -r 0.00025 -g 0.99 -s 1000000 -b 128 -i 2000 -c 5000`
+* `python taxi_main.py --train -a -m location-one-hot -e 5000 -x lin -d 800 -u 150 -o RMSprop -r 0.00025 -g 0.99 -s 1000000 -b 128 -i 2000 -c 5000`
 
-`cd /path/to/dir/with/bgd_regression_example.py`
+For full description of the flags, see the full API.
 
-`tensorboard --logdir=./tf_logs` 
+## Taxi-v2 Environment (Policy Gradient)
 
-![tensorboard](https://github.com/taldatech/tf-bgd/blob/master/imgs/tensorboard.png)
+## Acrobot Environment (DQN)
+
+### API (`python acrobot_main.py --help`)
+
+
+You should use the `acrobot_main.py` file with the following arguments:
+
+|Argument                 | Description                                 |
+|-------------------------|---------------------------------------------|
+|-h, --help       | shows arguments description             |
+|-t, --train     | train or continue training an agent  |
+|-p, --play    | play the environment using an a pretrained agent |
+|-n, --name       | model name, for saving and loading, if not set, training will continue from a pretrained checkpoint |
+|-m, --mode	| model's mode or state representation ('frame_diff', 'frame_seq'), default: 'frame_diff' |
+|-e, --episodes| number of episodes to play or train, default: 5 (play), 5000 (train) |
+|-x, --exploration| epsilong-greedy scheduling ('exp', 'lin'), default: 'exp'|
+|-d, --decay_rate| number of episodes for epsilon decaying, default: 2000 |
+|-u, --frame_history_len| number of frames to represent a state in 'frame_seq' mode, default: 4 |
+|-o, --optimizer| optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp' |
+|-r, --learn_rate| learning rate for the optimizer, default: 0.0003 |
+|-g, --gamma| gamma parameter for the Q-Learning, default: 0.99 |
+|-s, --buffer_size| Replay Buffer size, default: 1000000 |
+|-b, --batch_size| number of samples in each batch, default: 32 |
+|-i, --steps_to_start_learn| number of steps before the agents starts learning, default: 1000 |
+|-c, --target_update_freq| number of steps between copying the weights to the target DQN, default: 5000 |
+|-a, --clip_grads| use Gradient Clipping regularization (default: False) |
+|-z, --batch_norm| use Batch Normalization between DQN's layers (default: False) |
+|-y, --dropout| use Dropout regularization on the layers of the DQN (default: False) |
+|-q, --dropout_rate| probability for a layer to be dropped when using Dropout, default: 0.4 |
+
+### Playing
+Agents checkpoints (files ending with `.pth`) are saved and loaded from the `acrobot_agent_ckpt` directory.
+Playing a pretrained agent for 5 episodes:
+
+`python acrobot_main.py --play`
+
+For more more episodes, e.g 10:
+
+`python acrobot_main.py --play -e 10`
+
+Playing a pretrained agent with Frame Sequence state representation:
+
+`python acrobot_main.py --play -m frame_seq -e 3`
+
+For playing another chekpoint, the `-n` flag must correspond with a `.pth` checkpoint file in the `acrobot_agent_ckpt` directory.
+
+### Training
+
+Note: in order to continue training from a pretrained checkpoint you can either:
+	1. Name the model with the same name as the saved chekpoint (e.g. if the there exists `acrobot_agent_user.pth` the model name should be `user`)
+	2. Leave out the name (don't use the `-n` flag) and a default pretrained checkpoint will be loaded and a random name will be given (which you can change later)
+
+Examples:
+
+* `python acrobot_main.py --train -a -n my_acrobot -m frame_diff -e 5000 -x exp -d 1000 -o RMSprop -r 0.00025 -g 0.99 -s 1000000 -b 32 -i 2000 -c 5000`
+* `python acrobot_main.py --train -a -z -e 5000 -x exp -d 1000 -o RMSprop -r 0.00025 -g 0.99 -s 1000000 -b 32 -i 2000 -c 5000` (Continual Learning)
+* `python acrobot_main.py --train -a -z -n my_acrobot_frame_seq -m frame_seq -u 4 -e 5000 -x lin -d 2000 -o RMSprop -r 0.00025 -g 0.99 -s 1000000 -b 32 -i 2000 -c 5000`
+
+For full description of the flags, see the full API.

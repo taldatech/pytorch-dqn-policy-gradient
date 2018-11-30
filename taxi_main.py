@@ -43,7 +43,7 @@ def main():
     parser.add_argument("-u", "--hidden_units", type=int,
                         help="number of neurons in the hidden layer of the DQN, default: 150")
     parser.add_argument("-o", "--optimizer", type=str,
-                        help="Optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp")
+                        help="optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp'")
     parser.add_argument("-r", "--learn_rate", type=float,
                         help="learning rate for the optimizer, default: 0.0003")
     parser.add_argument("-g", "--gamma", type=float,

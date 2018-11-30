@@ -42,7 +42,7 @@ def main():
     parser.add_argument("-u", "--frame_history_len", type=int,
                         help="number of frames to represent a state in 'frame_seq' mode, default: 4")
     parser.add_argument("-o", "--optimizer", type=str,
-                        help="Optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp")
+                        help="optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp")
     parser.add_argument("-r", "--learn_rate", type=float,
                         help="learning rate for the optimizer, default: 0.0003")
     parser.add_argument("-g", "--gamma", type=float,
@@ -95,7 +95,7 @@ def main():
         else:
             exploration = ExponentialSchedule(decay_rate=2000)
         if (args.frame_history_len):
-            frame_history_len = frame_history_len
+            frame_history_len = args.frame_history_len
         else:
             frame_history_len = 4
         if (args.learn_rate):
