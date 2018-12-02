@@ -50,7 +50,7 @@ YouTube -
 |`*_training.status`| Pickle files with the recent training status for a model (episodes seen, total rewards...)|
 |`Taxi_Agent.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Taxi-v2 environemnt| 
 |`Acrobot_Agent.ipynb` | Jupyter Notebook with detailed explanation, derivations and graphs for the Acrobot-v1 environemnt| 
-|`writeup.pdf` | Summary of this work| 
+|`dqn_pg_writeup_gh.pdf` | Summary of this work| 
 
 
 ## Taxi-v2 Environment DQN
@@ -68,7 +68,7 @@ You should use the `taxi_main.py` file with the following arguments:
 |-n, --name       | model name, for saving and loading, if not set, training will continue from a pretrained checkpoint |
 |-m, --mode	| model's mode or state representation ('one-hot', 'location-one-hot'), default: 'one-hot' |
 |-e, --episodes| number of episodes to play or train, default: 2 (play), 5000 (train) |
-|-x, --exploration| epsilong-greedy scheduling ('exp', 'lin'), default: 'exp'|
+|-x, --exploration| epsilon-greedy scheduling ('exp', 'lin'), default: 'exp'|
 |-d, --decay_rate| number of episodes for epsilon decaying, default: 800 |
 |-u, --hidden_units| number of neurons in the hidden layer of the DQN, default: 150 |
 |-o, --optimizer| optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp' |
@@ -102,7 +102,9 @@ For playing another chekpoint, the `-n` flag must correspond with a `.pth` check
 ### Training
 
 Note: in order to continue training from a pretrained checkpoint you can either:
+
 	1. Name the model with the same name as the saved chekpoint (e.g. if the there exists `taxi_agent_user.pth` the model name should be `user`)
+	
 	2. Leave out the name (don't use the `-n` flag) and a default pretrained checkpoint will be loaded and a random name will be given (which you can change later)
 
 Examples:
@@ -131,7 +133,7 @@ You should use the `acrobot_main.py` file with the following arguments:
 |-n, --name       | model name, for saving and loading, if not set, training will continue from a pretrained checkpoint |
 |-m, --mode	| model's mode or state representation ('frame_diff', 'frame_seq'), default: 'frame_diff' |
 |-e, --episodes| number of episodes to play or train, default: 5 (play), 5000 (train) |
-|-x, --exploration| epsilong-greedy scheduling ('exp', 'lin'), default: 'exp'|
+|-x, --exploration| epsilon-greedy scheduling ('exp', 'lin'), default: 'exp'|
 |-d, --decay_rate| number of episodes for epsilon decaying, default: 2000 |
 |-u, --frame_history_len| number of frames to represent a state in 'frame_seq' mode, default: 4 |
 |-o, --optimizer| optimizing algorithm ('RMSprop', 'Adam'), deafult: 'RMSProp' |
@@ -165,7 +167,9 @@ For playing another chekpoint, the `-n` flag must correspond with a `.pth` check
 ### Training
 
 Note: in order to continue training from a pretrained checkpoint you can either:
+
 	1. Name the model with the same name as the saved chekpoint (e.g. if the there exists `acrobot_agent_user.pth` the model name should be `user`)
+	
 	2. Leave out the name (don't use the `-n` flag) and a default pretrained checkpoint will be loaded and a random name will be given (which you can change later)
 
 Examples:
