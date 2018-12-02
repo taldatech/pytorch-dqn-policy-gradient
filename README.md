@@ -3,7 +3,7 @@ PyTorch implementation for Deep Q-Learning and Policy Gradient algorithms on sev
 
 Video:
 
-YouTube - 
+YouTube - https://youtu.be/Bm1wXu8YBCY 
 
 
 ![taxi](https://github.com/taldatech/pytorch-dqn-policy-gradient/blob/master/imgs/taxi_agent_gif.gif)
