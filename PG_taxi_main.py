@@ -309,11 +309,13 @@ def main(load, agent_path, HL_size, save_base_dir='.', num_train_episodes=50000,
             break
 
     base_dir = save_base_dir
+    os.makedirs(base_dir, exist_ok=True)
     torch.save(agent.state_dict(), os.path.join(base_dir,
                                                 r'PG_taxi_agent_HL{0}_trained{1}.pt'.format(HL_size, i_episode)))
 
     # saving stats
     base_dir = os.path.join(base_dir, 'stats')
+    os.makedirs(base_dir, exist_ok=True)
     save_pickle(rewards_in_episodes, base_dir, 'rewards_HL{0}_trained{1}.p'.format(HL_size, i_episode))
     save_pickle(loss_in_episodes, base_dir, 'losses_HL{0}_trained{1}.p'.format(HL_size, i_episode))
     save_pickle(starting_states, base_dir, 'states_HL{0}_trained{1}.p'.format(HL_size, i_episode))
