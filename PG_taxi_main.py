@@ -5,13 +5,14 @@ import time
 import gym
 import numpy as np
 from itertools import count
-import taxi_policy
+import utils.taxi_policy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
 import pickle
+import argparse
 
 
 class PGAgent(nn.Module):
@@ -30,6 +31,8 @@ class PGAgent(nn.Module):
 
         self.num_of_states, self.number_of_actions = num_of_states, number_of_actions
         self.device = device
+
+        # arch with no variance reduction AC
         # self.affine1 = nn.Linear(num_of_states, HL_size)
         # self.affine2 = nn.Linear(HL_size, number_of_actions)
 
@@ -46,7 +49,7 @@ class PGAgent(nn.Module):
         self.clip_grads = clip_grads
         self.optimizer = None
         self.gamma = gamma
-        self.explor_factor = exploration
+        self.explore_factor = exploration
         assert 0 < gamma <= 1, 'gamma i.e. the discount factor should be between 0 and 1'
         assert 0 < exploration <= 1, 'epsilon i.e. the exploration factor should be between 0 and 1'
 
@@ -107,7 +110,7 @@ class PGAgent(nn.Module):
         with diminishing epsilon as the agent gets better
         :return: returns true if the agent should explore
         """
-        explore = Categorical(torch.tensor([1 - self.explor_factor, self.explor_factor])).sample()
+        explore = Categorical(torch.tensor([1 - self.explore_factor, self.explore_factor])).sample()
         return explore == 1
 
     def random_action(self):
@@ -169,16 +172,17 @@ class PGAgent(nn.Module):
 
 def eval_agent(agent, env, num_of_eps=1, render=False):
     """
-    evalueates the given agent with the env for
-    '  num_of_eps '
+    evaluates the given PG agent with the env for  ' num_of_eps '
+    note: sets the PG agent explore_factor to 0 before evaluating and restores it afterwards
     :param agent: agent
     :param env: env
     :param num_of_eps: number of episodes
     :param render: ef we should render each episode
     :return: the rewards collected in each episode
     """
-    agent.explor_factor = 0.0001
-    rewards =  []
+    orig_exp_factor = agent.explore_factor
+    agent.explore_factor = 0.0001
+    rewards = []
     for episode in range(num_of_eps):
         state = env.reset()
         episode_reward = []
@@ -197,10 +201,42 @@ def eval_agent(agent, env, num_of_eps=1, render=False):
         # time.sleep(2)
         rewards.append(np.sum(episode_reward))
         print('Episode {0}\t length: {1}\tepisode reward: {2} '.format(episode, t, rewards[-1]))
+
+    agent.explore_factor = orig_exp_factor
     return rewards
 
 
-def main(load, agent_path, HL_size, num_train_episodes=50000):
+def save_pickle(serializable_object, save_base_dir, pickle_name):
+    """
+    saves the serializable object into a pickle with the given name into the given directory
+    :param serializable_object: object to pickle
+    :param save_base_dir: where to save
+    :param pickle_name: filename
+    :return:
+    """
+
+    file_name = os.path.join(save_base_dir, pickle_name)
+    pickle.dump(serializable_object, open(file_name, "wb"))
+
+
+def main(load, agent_path, HL_size, save_base_dir='.', num_train_episodes=50000, num_eval_eps=3, render=True):
+    """
+    loads and evaluates agent or trains and evaluates the agent according to args
+    if chosen to train the trained agent will be saved in the following format
+    PG_taxi_agent_HL{HL_size}_trained{num_train_episodes}.pt with stats collected during training in
+    save_base_dir\stats\[StatName]_HL{HL_size}_trained{num_train_episodes}.p
+    saved stats are:  rewards (in training episodes), losses (in training episodes),
+    states (starting states in training episodes), episode_len( in training ...), eval_rewards
+    :param load: bool if to load the agent given in agent path and has Hidden layer size of HL_size
+    :param agent_path: agent to load. pytorch state_dict (relevant if load is true)
+    :param HL_size: size of the hidden layer for the agent to create and train or to load
+    :param save_base_dir: where to save the newly created and trained agent (relevant if load is false)
+    :param num_train_episodes: number of training episodes to train (relevant if load is false)
+    :param num_eval_eps: number of evaluation episodes we want either after training or loading
+    :param render: bool if we want a visual rendering of the evaluation episodes in the console (will render every ep.)
+    :return: list of rewards collected in the evaluation episodes
+    """
+
     # env and agent initialization
     seed = 0
     env = gym.make('Taxi-v2')
@@ -214,12 +250,11 @@ def main(load, agent_path, HL_size, num_train_episodes=50000):
     agent.set_optimizer(optimizer)
     agent.to(device)
 
-
-    # load and exaluate
+    # load and evaluate
     if load:
         agent.load_state_dict(torch.load(agent_path))
-        eval_agent(agent, env, render=True, num_of_eps=3)
-        return
+        rewards = eval_agent(agent, env, render=render, num_of_eps=num_eval_eps)
+        return rewards
 
     # training
     # initializing statistics
@@ -252,7 +287,7 @@ def main(load, agent_path, HL_size, num_train_episodes=50000):
         if i_episode % log_interval == 0:
             print('Episode {} \tstarting state: {:3d} \tLast length: {:5d}\tepisode reward: {:.3f} '
                   '\tpolicy loss: {:5f} \taverage episode reward: {: .3f}\t epsilon: {:.3f}'.format(
-                   i_episode, state, ep_len, episode_reward, policy_loss, np.mean(last_100_ep_reward), agent.explor_factor))
+                   i_episode, state, ep_len, episode_reward, policy_loss, np.mean(last_100_ep_reward), agent.explore_factor))
         # saving stats
         loss_in_episodes.append(policy_loss)
         rewards_in_episodes.append(episode_reward)
@@ -260,7 +295,7 @@ def main(load, agent_path, HL_size, num_train_episodes=50000):
         episode_len.append(ep_len)
 
         if i_episode % 2000 == 0:
-            agent.explor_factor *= 0.99
+            agent.explore_factor *= 0.99
 
         # check if problem is solved according to spec
         if i_episode > 100:
@@ -273,20 +308,60 @@ def main(load, agent_path, HL_size, num_train_episodes=50000):
         if i_episode == num_train_episodes:  # enough training !!
             break
 
-    torch.save(agent.state_dict(), r'PG_taxi_agent_HL{0}_trained{1}.pt'.format(HL_size, i_episode))
+    base_dir = save_base_dir
+    torch.save(agent.state_dict(), os.path.join(base_dir,
+                                                r'PG_taxi_agent_HL{0}_trained{1}.pt'.format(HL_size, i_episode)))
 
     # saving stats
-    pickle.dump(rewards_in_episodes, open(r'.\data\rewards_HL{0}_trained{1}.pt'.format(HL_size, i_episode), "wb"))
-    pickle.dump(loss_in_episodes, open(r'.\data\losses_HL{0}_trained{1}.pt'.format(HL_size, i_episode), "wb"))
-    pickle.dump(starting_states, open(r'.\data\states_HL{0}_trained{1}.pt'.format(HL_size, i_episode), "wb"))
-    pickle.dump(episode_len, open(r'.\data\episode_lens_HL{0}_trained{1}.pt'.format(HL_size, i_episode), "wb"))
+    base_dir = os.path.join(base_dir, 'stats')
+    save_pickle(rewards_in_episodes, base_dir, 'rewards_HL{0}_trained{1}.p'.format(HL_size, i_episode))
+    save_pickle(loss_in_episodes, base_dir, 'losses_HL{0}_trained{1}.p'.format(HL_size, i_episode))
+    save_pickle(starting_states, base_dir, 'states_HL{0}_trained{1}.p'.format(HL_size, i_episode))
+    save_pickle(episode_len, base_dir, 'episode_lens_HL{0}_trained{1}.p'.format(HL_size, i_episode))
 
-    raw_rewards = eval_agent(agent, env, 200)
-    pickle.dump(raw_rewards, open(r'.\data\raw_rewards_HL{0}_trained{1}.pt'.format(HL_size, i_episode), "wb"))
+    raw_rewards = eval_agent(agent, env, num_eval_eps, render=render)
+    save_pickle(raw_rewards, base_dir, 'eval_rewards_HL{0}_trained{1}.p'.format(HL_size, i_episode))
+
+    return raw_rewards
 
 
 if __name__ == '__main__':
-    agent_path = r'.\agents\PG_taxi_agent_HL128_50Kep_0.1eps_diminshing.pt'
-    main(load=False, agent_path=agent_path, HL_size=128, num_train_episodes=100000)
-    agent_path = r'.\agents\PG_taxi_agent_good_HL1024_10Keps_0.1eps.pt'
-    main(load=False, agent_path=agent_path, HL_size=1024, num_train_episodes=100000)
+
+    default_dir = os.path.join(os.getcwd(), 'taxi_agent_PG')
+    default_agent = os.path.join(os.getcwd(), 'taxi_agent_PG', 'PG_taxi_agent_HL128_trained100000.pt')
+
+    parser = argparse.ArgumentParser(description="train and play a Policy Gradient Taxi-v2 agent")
+    # modes
+    parser.add_argument("-t", "--train", help="train a new agent (if not given then we'll load the default agent"
+                                              " and evaluate it "
+                                              "note: give -r to see screen rendering )",
+                        action="store_true")
+    # arguments
+    # for loading
+    parser.add_argument("-path", "--agent_path", type=str, nargs='?', default=default_agent,
+                        help="path to a saved pre-trained PGAgent "
+                             "(default agent is taxi_agent_PG\PG_taxi_agent_HL128_trained100000.pt)")
+
+    # for training
+    parser.add_argument("-save_dir", "--save_base_dir", type=str, nargs='?', default=default_dir,
+                        help="where the agent and training stats will be saved (default is in taxi_agent_PG)")
+
+    parser.add_argument("-eps_train", "--num_train_episodes", type=int, nargs='?', default=100000,
+                        help="number of training episodes (default: 100000)")
+
+    # for both
+    parser.add_argument("-eps_eval", "--num_eval_eps", type=int, nargs='?', default=3,
+                        help="number of evaluation episodes (default: 3)")
+
+    parser.add_argument("-HL", "--HL_size", type=int, nargs='?', default=128,
+                        help="size of the hidden layer (default: 128)"
+                             "note: if loading an agent make sure to give the same HL_size as the saved agent")
+
+    parser.add_argument("-r", "--render", action="store_true",
+                        help="if to render evaluation episodes on console screen")
+
+    args = parser.parse_args()
+
+    # (load, agent_path, HL_size, save_base_dir='.', num_train_episodes=50000, num_eval_eps=3, render=True)
+    main(not args.train, args.agent_path, args.HL_size, args.save_base_dir, args.num_train_episodes, args.num_eval_eps,
+         args.render)
