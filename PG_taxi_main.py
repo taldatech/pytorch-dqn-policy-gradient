@@ -5,7 +5,7 @@ import time
 import gym
 import numpy as np
 from itertools import count
-import utils.taxi_policy
+import utils.taxi_policy as taxi_policy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
