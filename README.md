@@ -121,11 +121,11 @@ there you can use the following parameters to do what you want (train or play)
 if no parameters where passed then the default behavior would be to load the best trained agent we have and evaluate it for 3 episodes
 (pass -r to see rendering of the evaluation episodes on the screen)
 
- PG_taxi_main.py [-h] [-t] [-path [AGENT_PATH]] [-save_dir [SAVE_BASE_DIR]]
+ `PG_taxi_main.py [-h] [-t] [-path [AGENT_PATH]] [-save_dir [SAVE_BASE_DIR]]
                [-eps_train [NUM_TRAIN_EPISODES]] [-eps_eval [NUM_EVAL_EPS]]
-               [-HL [HL_SIZE]] [-r]
+               [-HL [HL_SIZE]] [-r]`
 
-train and play a Policy Gradient Taxi-v2 agent
+Train and play a Policy Gradient Taxi-v2 Agent
 
 |Argument                 | Description                                 |
 |-------------------------|---------------------------------------------|
@@ -138,24 +138,28 @@ train and play a Policy Gradient Taxi-v2 agent
 | -HL [HL_SIZE], --HL_size [HL_SIZE] | size of the hidden layer (default: 128) <br> note: if loading an agent make sure to <br> give the same HL_size as the saved agent |
 | -r, --render          | if to render evaluation episodes on console screen default is false|
 
-when training the the follwoing stats will be printed on the screen:
-rewards (in training episodes), losses (in training episodes),
-states (starting states in training episodes), episode_len( in training ...), eval_rewards
+When training the the follwoing stats will be printed on the screen:
 
-they will also be saved in a newly created sub directory SAVE_BASE_DIR\stats as pickle files to be reviewed for later
-agent trained name will be saved in this format: PG_taxi_agent_HL[number of hidden nureons]_trained[Number of trained episodes].pt
-same format for the stat pickles
+Rewards (in training episodes), Losses (in training episodes),
+States (starting states in training episodes), Episode_len( in training ...), Eval_rewards
 
-we recomend to give a SAVE_BASE_DIR other than the default one as to not override the original agents and stats
+They will also be saved in a newly created sub directory SAVE_BASE_DIR\stats as pickle files to be reviewed later.
 
-examples of use:
+Agent trained name will be saved in this format: PG_taxi_agent_HL[number of hidden neurons]_trained[number of trained episodes].pt
+
+Same format for the stat pickles.
+
+It is recommended to give a SAVE_BASE_DIR other than the default one as to not override the original agents and stats.
+
+Usage Example:
+
 `python PG_taxi_main.py`
-evaluates the default agent for 3 episodes and prints their stats ( note: on console screen rendering is not turned on by default
+
+Evaluates the default agent for 3 episodes and prints its stats ( note: on console screen rendering is not turned on by default).
 
 `python taxi_main.py --render --num_eval_eps 10`
-evaluated the default agent for 10 episodes and renders every episode on the console screen
 
-Enjoy !
+Evaluates the default agent for 10 episodes and renders every episode on the console screen.
 
 ## Acrobot Environment DQN
 
